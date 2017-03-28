@@ -16,7 +16,7 @@
 
 #include <Windows.h>
 
-#define UNCAPPED_VERSION "0.1.4"
+#define UNCAPPED_VERSION "0.1.5"
 #define UNCAPPED_TITLE "NieR: Uncapped"
 #define UNCAPPED_WNDCLASS "NieRUncappedWnd"
 #define GAME_WNDCLASS "NieR:Automata_MainWindow"
@@ -47,7 +47,7 @@ MessageBoxA(						\
 		len,					\
 		PAGE_EXECUTE_READWRITE,	\
 		&old_protect_mask		\
-	);							
+	)							
 	
 #define mend(addr, len) 		\
 	VirtualProtect(				\
@@ -55,7 +55,7 @@ MessageBoxA(						\
 		len,					\
 		old_protect_mask,		\
 		&old_protect_mask		\
-	);							
+	)							
 
 u8* psleep;
 u8* pspinlock; 
@@ -65,6 +65,7 @@ u8* pmax_tstep;
 b32* pmenu;
 b32* ptitle_or_load;
 b32* phacking;
+b32* pshortcut_menu;
 
 void init_addresses()
 {
@@ -86,28 +87,31 @@ void init_addresses()
 	
 	/* 48 ? ? ? ? ? ? 00 8B ? 0F 85 ? ? ? ? 48 */
 	phacking       = (b32*)(base + 0x10E0AB4);
+	
+	/* 83 3D ? ? ? ? 00 74 ? 41 ? ? ? ? ? ? 40 */
+	pshortcut_menu = (b32*)(base + 0x13FC35C);
 }
 
 void fps_uncap()
 {
 	u32 old_protect_mask;
 
-	mbegin(psleep, 6)
+	mbegin(psleep, 6);
 	memset(psleep, 0x90, 6);
-	mend(psleep, 6)
+	mend(psleep, 6);
 	
-	mbegin(pspinlock, 2)
+	mbegin(pspinlock, 2);
 	memset(pspinlock, 0x90, 2);
-	mend(pspinlock, 2)
+	mend(pspinlock, 2);
 	
-	mbegin(pmin_tstep, 1)
+	mbegin(pmin_tstep, 1);
 	*pmin_tstep = 0xEB;
-	mend(pmin_tstep, 1)
+	mend(pmin_tstep, 1);
 	
-	mbegin(pmax_tstep, 2)
+	mbegin(pmax_tstep, 2);
 	pmax_tstep[0] = 0x90;
 	pmax_tstep[1] = 0xE9;
-	mend(pmax_tstep, 2)
+	mend(pmax_tstep, 2);
 }
 
 void fps_cap()
@@ -116,25 +120,25 @@ void fps_cap()
 	
 	u32* psleep_delta = (u32*)(psleep + 2);
 	
-	mbegin(psleep, 6)
+	mbegin(psleep, 6);
 	psleep[0] = 0xFF;
 	psleep[1] = 0x15;
 	*psleep_delta = 0x062C4BD3;
-	mend(psleep, 6)
+	mend(psleep, 6);
 	
-	mbegin(pspinlock, 2)
+	mbegin(pspinlock, 2);
 	pspinlock[0] = 0x77;
 	pspinlock[1] = 0x9F;
-	mend(pspinlock, 2)
+	mend(pspinlock, 2);
 	
-	mbegin(pmin_tstep, 1)
+	mbegin(pmin_tstep, 1);
 	*pmin_tstep = 0x73;
-	mend(pmin_tstep, 1)
+	mend(pmin_tstep, 1);
 	
-	mbegin(pmax_tstep, 2)
+	mbegin(pmax_tstep, 2);
 	pmax_tstep[0] = 0x0F;
 	pmax_tstep[1] = 0x86;
-	mend(pmax_tstep, 2)
+	mend(pmax_tstep, 2);
 }
 
 #undef mbegin
@@ -204,6 +208,7 @@ LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 				/* 5s after game starts */
 				case ID_STARTUP_TIMER:
 					init_addresses();
+					
 					KillTimer(wnd, ID_STARTUP_TIMER);
 					SetTimer(wnd, ID_TIMER, 200, 0);
 					SetTimer(wnd, ID_CLOSE_TIMER, 1000, 0);
@@ -213,7 +218,10 @@ LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 				case ID_TIMER:
 				{
 					b32 should_be_capped =
-						*pmenu || *ptitle_or_load || *phacking;
+						*pmenu ||
+						*ptitle_or_load || 
+						*phacking ||
+						*pshortcut_menu;
 					
 					if (!capped && should_be_capped) {
 						fps_cap();

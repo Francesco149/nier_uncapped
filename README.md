@@ -17,9 +17,10 @@ https://streamable.com/mg55t
 # Disclaimer
 
 This is a super early release.
-This code was put together in < 2 hours and still needs massive
-clean-up and optimization. Will update soon. This has been barely
-tested and only on windows 7 x64.
+This code was put together in < 2 hours and still needs cleanup and
+error checking.
+
+Tested on Windows 10 x64 and Windows 7 x64.
 
 # How to use
 * Install FAR: http://steamcommunity.com/app/524220/discussions/0/135512104777399045
