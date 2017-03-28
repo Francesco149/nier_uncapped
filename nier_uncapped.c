@@ -16,7 +16,7 @@
 
 #include <Windows.h>
 
-#define UNCAPPED_VERSION "0.1.2"
+#define UNCAPPED_VERSION "0.1.3"
 #define UNCAPPED_TITLE "NieR: Uncapped"
 #define UNCAPPED_WNDCLASS "NieRUncappedWnd"
 #define GAME_WNDCLASS "NieR:Automata_MainWindow"
@@ -63,6 +63,7 @@ u8* pmax_tstep;
 
 b32* pmenu;
 b32* ptitle_or_load;
+b32* phacking;
 
 void init_addresses()
 {
@@ -81,6 +82,9 @@ void init_addresses()
 	
 	/* ? 3D ? ? ? ? 74 2A ? 3D ? ? ? ? EB */
 	ptitle_or_load = (b32*)(base + 0x1975520);
+	
+	/* 48 ? ? ? ? ? ? 00 8B ? 0F 85 ? ? ? ? 48 */
+	phacking       = (b32*)(base + 0x10E0AB4);
 }
 
 void fps_uncap()
@@ -208,7 +212,7 @@ LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 				case ID_TIMER:
 				{
 					b32 should_be_capped =
-						*pmenu || *ptitle_or_load;
+						*pmenu || *ptitle_or_load || *phacking;
 					
 					if (!capped && should_be_capped) {
 						fps_cap();
