@@ -37,6 +37,9 @@ Role=ThirdParty
 When=PlugIn
 ```
 
+Scroll down to ```[Render.FrameRate]``` and change TargetFPS to
+0.0.
+
 * Run the game, disable vsync in the options and hope for the best.
 
 # If it doesn't work
