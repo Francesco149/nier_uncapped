@@ -16,7 +16,7 @@
 
 #include <Windows.h>
 
-#define UNCAPPED_VERSION "0.1.1"
+#define UNCAPPED_VERSION "0.1.2"
 #define UNCAPPED_TITLE "NieR: Uncapped"
 #define UNCAPPED_WNDCLASS "NieRUncappedWnd"
 #define GAME_WNDCLASS "NieR:Automata_MainWindow"
@@ -56,10 +56,32 @@ MessageBoxA(						\
 		&old_protect_mask		\
 	);							
 
-u8* psleep     = (u8*)0x14092E887;
-u8* pspinlock  = (u8*)0x14092E8CF;
-u8* pmin_tstep = (u8*)0x140805DEC;
-u8* pmax_tstep = (u8*)0x140805E18;
+u8* psleep;
+u8* pspinlock; 
+u8* pmin_tstep;
+u8* pmax_tstep;
+
+b32* pmenu;
+b32* ptitle_or_load;
+
+void init_addresses()
+{
+	u8* base = (u8*)GetModuleHandle(0);
+	
+	/* FF 15 ? ? ? ? 48 ? ? 24 ? FF 15 ? ? ? ? 48 ? ? 24 ? 0F */
+	psleep     = base + 0x92E887;
+	pspinlock  = base + 0x92E8CF; /* + 72 */
+	
+	/* 73 ? C7 05 ? ? ? ? 00 00 80 3F 48 */
+	pmin_tstep = base + 0x805DEC;
+	pmax_tstep = base + 0x805E18; /* + 44 */
+	
+	/* 48 ? 1D ? ? ? ? 48 ? 0D ? ? ? ? C7 ? ? ? ? ? 00 00 00 00 */
+	pmenu          = (b32*)(base + 0x18F39C4);
+	
+	/* ? 3D ? ? ? ? 74 2A ? 3D ? ? ? ? EB */
+	ptitle_or_load = (b32*)(base + 0x1975520);
+}
 
 void fps_uncap()
 {
@@ -158,9 +180,6 @@ void init_wnd(HINSTANCE instance)
 
 b32 capped = 1;
 
-b32* pmenu          = (b32*)0x1418F39C4;
-b32* ptitle_or_load = (b32*)0x141975520;
-
 internal
 LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -179,6 +198,7 @@ LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 			{
 				/* 5s after game starts */
 				case ID_STARTUP_TIMER:
+					init_addresses();
 					KillTimer(wnd, ID_STARTUP_TIMER);
 					SetTimer(wnd, ID_TIMER, 200, 0);
 					SetTimer(wnd, ID_CLOSE_TIMER, 1000, 0);
