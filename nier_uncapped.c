@@ -401,8 +401,8 @@ void hook()
 	}
 	
 	/* windows 10 seems to have slightly different asm */
-	original_code 		= original_code_w7;
-	original_code_len 	= sizeof(original_code_w7);
+	original_code 	  = original_code_w7;
+	original_code_len = sizeof(original_code_w7);
 	
 	cmp =
 		memcmp(
@@ -412,8 +412,8 @@ void hook()
 		);
 		
 	if (cmp) {
-		original_code = original_code_w10;
-		original_code_len 	= sizeof(original_code_w10);
+		original_code     = original_code_w10;
+		original_code_len = sizeof(original_code_w10);
 	}
 	
 	/* create trampoline to original CreateWindowExA */

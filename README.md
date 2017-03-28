@@ -4,8 +4,8 @@ All credits go to Altimor:
 https://www.reddit.com/user/Altimor who discovered this method to
 manipulate min/max timestep.
 
-I simply spent like 2 hours finding decently reliable pointers to
-detect the main menu and the pause menu.
+All I did was spend some time finding decently reliable pointers to
+detect menus and other parts.
 
 This tool allows the game to run above 60fps during gameplay and
 dynamically re-enables the FPS cap in the pause menu, title screen
@@ -13,12 +13,6 @@ and other menus that don't behave properly at high FPS.
 
 Video demonstration (minor playable character spoiler):
 https://streamable.com/mg55t
-
-# Disclaimer
-
-This is a super early release.
-This code was put together in < 2 hours and still needs cleanup and
-error checking.
 
 Tested on Windows 10 x64 and Windows 7 x64.
 
@@ -56,6 +50,20 @@ can get on this game.
 
 Higher FPS also feels much better, especially on high refresh rate
 monitors.
+
+# Disclaimer
+This code was put together in < 2 hours and doesn't have much
+error checking. It's not the prettiest code either.
+
+I don't plan on maintaining this project for a long time, but the
+code is public and people can pick up from this research.
+
+The game's engine seems to be very inconsistent and some things are
+hardcoded to 60fps while others use the min/max deltatime that is
+uncapped by this mod.
+
+It will likely take some time and more people who can reverse to
+fully iron out all subtle bugs caused by uncapped fps.
 
 # How to compile it yourself
 * Clone this repo
