@@ -7,19 +7,12 @@ manipulate min/max timestep.
 I simply spent like 2 hours finding decently reliable pointers to
 detect the main menu and the pause menu.
 
-This method doesn't speed up physics and doesn't break menus, as
-it keeps framerate capped in menus that can't handle it.
-
-# What it does
-This allows the game to run above 60fps during gameplay and
+This tool allows the game to run above 60fps during gameplay and
 dynamically re-enables the FPS cap in the pause menu, title screen
 and other menus that don't behave properly at high FPS.
 
 Video demonstration (minor playable character spoiler):
 https://streamable.com/mg55t
-
-Sorry for the low res, just wanted to make the game run as fast as
-possible to demonstrate the uncapped-ness in-game.
 
 # Disclaimer
 
