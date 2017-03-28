@@ -16,7 +16,8 @@
 
 #include <Windows.h>
 
-#define TITLE "NieR: Uncapped"
+#define UNCAPPED_VERSION "0.1.1"
+#define UNCAPPED_TITLE "NieR: Uncapped"
 #define UNCAPPED_WNDCLASS "NieRUncappedWnd"
 #define GAME_WNDCLASS "NieR:Automata_MainWindow"
 
@@ -29,8 +30,13 @@ typedef BOOL  b32;
 
 globvar HWND wnd = INVALID_HANDLE_VALUE;
 
-#define err(msg) \
-MessageBoxA(NULL, __FUNCTION__ " " msg " failed", TITLE, MB_OK);
+#define err(msg) 					\
+MessageBoxA(						\
+	NULL,							\
+	__FUNCTION__ " " msg " failed", \
+	UNCAPPED_TITLE, 				\
+	MB_OK							\
+);
 
 /* ------------------------------------------------------------- */
 
@@ -130,7 +136,7 @@ void init_wnd(HINSTANCE instance)
     wnd = CreateWindowExA(
         0,
         UNCAPPED_WNDCLASS,
-        TITLE,
+        UNCAPPED_TITLE,
         0, 0, 0, 0, 0,
 		HWND_MESSAGE,
         0,
@@ -146,12 +152,14 @@ void init_wnd(HINSTANCE instance)
     ShowWindow(wnd, SW_HIDE);
 }
 
-#define ID_TIMER 1
+#define ID_STARTUP_TIMER	1
+#define ID_TIMER			2
+#define ID_CLOSE_TIMER		3
 
 b32 capped = 1;
 
-b32* pmenu             = (b32*)0x1418F39C4;
-b32* ptitle_or_loading = (b32*)0x141975520;
+b32* pmenu          = (b32*)0x1418F39C4;
+b32* ptitle_or_load = (b32*)0x141975520;
 
 internal
 LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -159,7 +167,7 @@ LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
     switch (msg)
 	{
 		case WM_CREATE:
-			SetTimer(wnd, ID_TIMER, 5000, 0);
+			SetTimer(wnd, ID_STARTUP_TIMER, 5000, 0);
 			break;
 	 
 		case WM_CLOSE:
@@ -167,35 +175,43 @@ LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 			break;
 			
 		case WM_TIMER:
-		{
-			b32 should_be_capped;
-			
-			if (wp != ID_TIMER) {
-				break;
+			switch (wp)
+			{
+				/* 5s after game starts */
+				case ID_STARTUP_TIMER:
+					KillTimer(wnd, ID_STARTUP_TIMER);
+					SetTimer(wnd, ID_TIMER, 200, 0);
+					SetTimer(wnd, ID_CLOSE_TIMER, 1000, 0);
+					break;
+				
+				/* fast timer */
+				case ID_TIMER:
+				{
+					b32 should_be_capped =
+						*pmenu || *ptitle_or_load;
+					
+					if (!capped && should_be_capped) {
+						fps_cap();
+						capped ^= 1;
+					} else if (capped && !should_be_capped) {
+						fps_uncap();
+						capped ^= 1;
+					}
+
+					break;
+				}
+				
+				/* slow timer */
+				case ID_CLOSE_TIMER:
+					if (!FindWindow(GAME_WNDCLASS, 0)) {
+						CloseWindow(wnd);
+					}
 			}
-			
-			should_be_capped = *pmenu || *ptitle_or_loading;
-			
-			if (!capped && should_be_capped) {
-				fps_cap();
-				capped ^= 1;
-			} else if (capped && !should_be_capped) {
-				fps_uncap();
-				capped ^= 1;
-			}
-			
-			/* TODO: don't waste CPU like a retard */
-			SetTimer(wnd, ID_TIMER, 100, 0);
-			
-			if (!FindWindow(GAME_WNDCLASS, 0)) {
-				CloseWindow(wnd);
-			}
-			
 			break;
-		}
 	 
 		case WM_DESTROY:
 			KillTimer(wnd, ID_TIMER);
+			KillTimer(wnd, ID_STARTUP_TIMER);
 			PostQuitMessage(0);
 			break;
 	 
@@ -279,6 +295,7 @@ globvar sig_CreateWindowExA* pCreateWindowExA_original = 0;
 
 internal void unhook();
 
+internal
 CREATE_WINDOW_EX_A_SIG(CreateWindowExA_hook)
 {	
 	if (!strcmp(class_name, GAME_WNDCLASS))
