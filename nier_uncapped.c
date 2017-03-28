@@ -16,7 +16,7 @@
 
 #include <Windows.h>
 
-#define UNCAPPED_VERSION "0.1.3"
+#define UNCAPPED_VERSION "0.1.4"
 #define UNCAPPED_TITLE "NieR: Uncapped"
 #define UNCAPPED_WNDCLASS "NieRUncappedWnd"
 #define GAME_WNDCLASS "NieR:Automata_MainWindow"
@@ -24,9 +24,10 @@
 #define internal static
 #define globvar static
 
-typedef DWORD u32;
-typedef BYTE  u8;
-typedef BOOL  b32;
+typedef DWORD 	u32;
+typedef BYTE  	u8;
+typedef BOOL  	b32;
+typedef SIZE_T	uintptr;
 
 globvar HWND wnd = INVALID_HANDLE_VALUE;
 
@@ -254,7 +255,7 @@ LRESULT CALLBACK wndproc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 #define X64_JMP_LEN 14
 
 internal
-void write_64bit_jmp(void* src, void* dst, u32 nops)
+void write_64bit_jmp(void* src, void* dst, uintptr nops)
 {
 	u8 bytecode[X64_JMP_LEN] =
 	{
@@ -277,7 +278,7 @@ void write_64bit_jmp(void* src, void* dst, u32 nops)
 }
 
 /*
-	USER32.CreateWindowExA
+	Windows 7 CreateWindowExA
 	773FA230 - 4C 8B DC              - mov r11,rsp
 	773FA233 - 48 83 EC 78           - sub rsp,78
 	773FA237 - 48 8B 84 24 D8000000  - mov rax,[rsp+000000D8]
@@ -285,17 +286,46 @@ void write_64bit_jmp(void* src, void* dst, u32 nops)
 	773FA247 - 49 89 43 E0           - mov [r11-20],rax
 	773FA24B - 48 8B 84 24 D0000000  - mov rax,[rsp+000000D0]
 	773FA253 - 49 89 43 D8           - mov [r11-28],rax
+	
+	Windows 10 CreateWindowEx:
+	7FFC6F289E90 - 4C 8B DC              - mov r11,rsp
+	7FFC6F289E93 - 48 81 EC 88000000     - sub rsp,00000088
+	7FFC6F289E9A - 33 C0                 - xor eax,eax
+	7FFC6F289E9C - 66 89 44 24 78        - mov [rsp+78],ax
+	7FFC6F289EA1 - 89 44 24 70           - mov [rsp+70],eax
+	7FFC6F289EA5 - C7 44 24 68 01000040  - mov [rsp+68],40000001
+	7FFC6F289EAD - 89 44 24 60           - mov [rsp+60],eax
+	7FFC6F289EB1 - 48 8B 84 24 E8000000  - mov rax,[rsp+000000E8]
+	7FFC6F289EB9 - 49 89 43 D0           - mov [r11-30],rax
+	7FFC6F289EBD - 48 8B 84 24 E0000000  - mov rax,[rsp+000000E0]
+	7FFC6F289EC5 - 49 89 43 C8           - mov [r11-38],rax
+	7FFC6F289EC9 - 48 8B 84 24 D8000000  - mov rax,[rsp+000000D8]
+	7FFC6F289ED1 - 49 89 43 C0           - mov [r11-40],rax
+	7FFC6F289ED5 - 48 8B 84 24 D0000000  - mov rax,[rsp+000000D0]
+	7FFC6F289EDD - 49 89 43 B8           - mov [r11-48],rax
 */
 
 const
-u8 original_code[15] =
+u8 original_code_w7[15] =
 {
 	0x4C, 0x8B, 0xDC,
 	0x48, 0x83, 0xEC, 0x78,
 	0x48, 0x8B, 0x84, 0x24, 0xD8, 0x00, 0x00, 0x00
 };
 
-globvar u8 trampoline[sizeof(original_code) + X64_JMP_LEN];
+const
+u8 original_code_w10[17] =
+{
+	0x4C, 0x8B, 0xDC,
+	0x48, 0x81, 0xEC, 0x88, 0x00, 0x00, 0x00,
+	0x33, 0xC0,
+	0x66, 0x89, 0x44, 0x24, 0x78
+};
+
+u8 const* original_code;
+uintptr original_code_len;
+
+globvar u8 trampoline[sizeof(original_code_w10) + X64_JMP_LEN];
 
 #define CREATE_WINDOW_EX_A_SIG(name) \
 HWND WINAPI name(			\
@@ -348,6 +378,7 @@ void hook()
 {
 	b32 res;
 	u32 trash;
+	int cmp;
 	
 	pCreateWindowExA =
 	pCreateWindowExA_original =
@@ -361,11 +392,27 @@ void hook()
 		return;
 	}
 	
+	/* windows 10 seems to have slightly different asm */
+	original_code 		= original_code_w7;
+	original_code_len 	= sizeof(original_code_w7);
+	
+	cmp =
+		memcmp(
+			pCreateWindowExA_original,
+			original_code,
+			original_code_len
+		);
+		
+	if (cmp) {
+		original_code = original_code_w10;
+		original_code_len 	= sizeof(original_code_w10);
+	}
+	
 	/* create trampoline to original CreateWindowExA */
-	memcpy(trampoline, original_code, sizeof(original_code));
+	memcpy(trampoline, original_code, original_code_len);
 	write_64bit_jmp(
-		trampoline + sizeof(original_code),
-		(u8*)pCreateWindowExA_original + sizeof(original_code),
+		trampoline + original_code_len,
+		(u8*)pCreateWindowExA_original + original_code_len,
 		0
 	);
 	
@@ -388,7 +435,7 @@ void hook()
 	res =
 		VirtualProtect(
 			pCreateWindowExA_original,
-			sizeof(original_code),
+			original_code_len,
 			PAGE_EXECUTE_READWRITE,
 			&old_protect_mask
 		);
@@ -401,7 +448,7 @@ void hook()
 	write_64bit_jmp(
 		pCreateWindowExA_original,
 		CreateWindowExA_hook,
-		sizeof(original_code) - X64_JMP_LEN
+		original_code_len - X64_JMP_LEN
 	);
 }
 
@@ -413,13 +460,13 @@ void unhook()
 	memcpy(
 		pCreateWindowExA_original,
 		original_code,
-		sizeof(original_code)
+		original_code_len
 	);
 	
 	res =
 		VirtualProtect(
 			pCreateWindowExA_original,
-			sizeof(original_code),
+			original_code_len,
 			old_protect_mask,
 			&old_protect_mask
 		);
