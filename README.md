@@ -5,9 +5,21 @@ https://www.reddit.com/user/Altimor who discovered this method to
 manipulate min/max timestep.
 
 I simply spent like 2 hours finding decently reliable pointers to
-detect the main menu and the pause menu (which have fixed timestep
-and would become unusable) to dynamically cap and uncap framerate
-as you enter and exit menus.
+detect the main menu and the pause menu.
+
+This method doesn't speed up physics and doesn't break menus, as
+it keeps framerate capped in menus that can't handle it.
+
+# What it does
+This allows the game to run above 60fps during gameplay and
+dynamically re-enables the FPS cap in the pause menu, title screen
+and other menus that don't behave properly at high FPS.
+
+Video demonstration (minor playable character spoiler):
+https://streamable.com/mg55t
+
+Sorry for the low res, just wanted to make the game run as fast as
+possible to demonstrate the uncapped-ness in-game.
 
 # Disclaimer
 
@@ -35,20 +47,18 @@ When=PlugIn
 * Run the game, disable vsync in the options and hope for the best.
 
 # If it doesn't work
-Kill nier automata from the task manager.
+Kill nier automata from the task manager if it's still there.
+
 Delete nier_uncapped.dll from the game's folder.
+
 Revert the ini, but it shouldn't be necessary.
 
-# What it does
-This allows the game to run above 60fps during gameplay and dynamically re-enables the FPS cap in the pause menu, title screen and other menus that don't behave properly at high FPS.
-
-Video demonstration (minor playable character spoiler): https://streamable.com/mg55t
-
-Sorry for the low res, just wanted to make the game run as fast as possible to demonstrate the uncapped-ness in-game.
-
 # Why would I want this
-You might have a good pc and want to get the full performance it can get on this game.
-Higher FPS also feels much better, especially on high refresh rate monitors.
+You might have a good pc and want to get the full performance it
+can get on this game.
+
+Higher FPS also feels much better, especially on high refresh rate
+monitors.
 
 # How to compile it yourself
 * Clone this repo
