@@ -7,6 +7,17 @@ manipulate min/max timestep.
 All I did was spend some time finding decently reliable pointers to
 detect menus and other parts.
 
+# Attention
+This tool is now built into FAR:
+http://steamcommunity.com/app/524220/discussions/0/135512104777399045
+
+Just install that instead (unless you're here to mess around with
+the code).
+
+This was meant more as a proof of concept for people to build on
+top of.
+
+# Intro
 This tool allows the game to run above 60fps during gameplay and
 dynamically re-enables the FPS cap in the pause menu, title screen
 and other menus that don't behave properly at high FPS.
@@ -51,16 +62,29 @@ can get on this game.
 Higher FPS also feels much better, especially on high refresh rate
 monitors.
 
-# Disclaimer
-This code was put together in < 2 hours and doesn't have much
-error checking. It's not the prettiest code either.
-
-I don't plan on maintaining this project for a long time, but the
-code is public and people can pick up from this research.
-
-The game's engine seems to be very inconsistent and some things are
+# Does it break the game?
+I wouldn't consider this viable for a full playthrough. The game's
+engine seems to be very inconsistent and some things are
 hardcoded to 60fps while others use the min/max deltatime that is
 uncapped by this mod.
+
+It's a fun mod to experiment with, but for most people
+I recommend capping fps back to 60 as needed using FAR's FPS
+limiter, especially for broken chapters.
+even if you play at 60fps, the uncapper is still useful because it
+bypasses the game's built in frame limiter, allowing you to use
+FARs limiter without having to set it below 60, which should be
+better.
+
+For normal combat and exploring it works great, but there will be
+parts that are completely broken, such as shmup missions, ending E,
+as well as some sutble bugs like the roundkick move being too fast.
+
+Many of these things could be fixed with enough reversing.
+
+I don't plan on working this project regularly, it was mainly
+for fun and to keep my win32 and hooking knowledge fresh, but the
+code is public domain and people can pick up from this research.
 
 It will likely take some time and more people who can reverse to
 fully iron out all subtle bugs caused by uncapped fps.
