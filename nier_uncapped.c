@@ -16,7 +16,7 @@
 
 #include <Windows.h>
 
-#define UNCAPPED_VERSION "0.1.5"
+#define UNCAPPED_VERSION "0.1.6"
 #define UNCAPPED_TITLE "NieR: Uncapped"
 #define UNCAPPED_WNDCLASS "NieRUncappedWnd"
 #define GAME_WNDCLASS "NieR:Automata_MainWindow"
@@ -501,6 +501,7 @@ b32 APIENTRY DllMain(
 				(LPTHREAD_START_ROUTINE)hook,
 				0, 0, 0
 			);
+			break;
 			
 		case DLL_PROCESS_DETACH:
 			if (wnd != INVALID_HANDLE_VALUE) {
